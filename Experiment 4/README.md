@@ -1,154 +1,76 @@
+# Experiment 4 — Projectile Motion, Quadratic Roots and Simultaneous Equations
 
+Covers user-defined functions with multiple inputs and outputs, numerical integration
+with the Euler method, branching on the discriminant of a quadratic, and solving
+linear systems with the backslash operator.
 
-g = 9.8; % Gravity (m/s^2)
+## Files and which values you need to change
 
-% Initialize Figure with 4 Subplots for comprehensive testing
-figure('Name', 'Experiment 1: Comprehensive Projectile Motion Analysis', 'Position', [100, 100, 1000, 800]);
+| File | Topic | Values |
+| --- | --- | --- |
+| [4.1.m](4.1.m) | Projectile motion, air resistance, varying angles and velocities | ✏️ **Change this** |
+| [4.2.m](4.2.m) | `solve_quadratic` — roots of a quadratic equation | ✏️ **Change this** |
+| [4.3.m](4.3.m) | `solve_linear_system` — simultaneous equations | ✏️ **Change this** |
 
-% =========================================================================
-% 1. Standard Trajectory vs. Air Resistance Enhancement (Steps 2, 3, 5)
-% =========================================================================
-v0_std = 50;
-theta_std_deg = 45;
-theta_std = (pi / 180) * theta_std_deg;
+**All three files in this experiment use values chosen by us, not by the lecturer.**
+The functions themselves are correct and general — it is only the *test inputs* at
+the bottom of each script that you need to swap out.
 
-t_max_std = (2 * v0_std * sin(theta_std)) / g;
-t_std = linspace(0, t_max_std, 200);
+## ✏️ What to change in 4.1.m — Projectile motion
 
-x_std = v0_std .* cos(theta_std) .* t_std;
-y_std = v0_std .* sin(theta_std) .* t_std - 0.5 .* g .* t_std.^2;
+The lab sheet did not give us a launch velocity or angle, so these were picked:
 
-% Air Resistance (Euler Method)
-m = 1.0;
-b = 0.25;
-dt = t_std(2) - t_std(1);
+```matlab
+v0_std = 50;          % <-- your own initial velocity (m/s)
+theta_std_deg = 45;   % <-- your own launch angle (degrees)
+```
 
-x_air = zeros(1, length(t_std));
-y_air = zeros(1, length(t_std));
-vx = v0_std * cos(theta_std);
-vy = v0_std * sin(theta_std);
+Further down, three more sets of values drive the other subplots:
 
-for i = 2:length(t_std)
-    ax = -(b/m) * vx;
-    ay = -g - (b/m) * vy;
-    
-    vx = vx + ax * dt;
-    vy = vy + ay * dt;
-    
-    x_air(i) = x_air(i-1) + vx * dt;
-    y_air(i) = y_air(i-1) + vy * dt;
-    
-    if y_air(i) < 0
-        x_air = x_air(1:i);
-        y_air = y_air(1:i);
-        break;
-    end
-end
+```matlab
+m = 1.0;   b = 0.25;              % <-- air-resistance mass and drag coefficient
+test_angles = [30, 45, 60, 75];   % <-- angles for the "varying angles" subplot
+test_velocities = [20, 30, 40, 50]; % <-- velocities for the "varying velocity" subplot
+```
 
-subplot(2, 2, 1);
-plot(x_std, y_std, 'b-', 'LineWidth', 1.5);
-hold on;
-plot(x_air, y_air, 'r--', 'LineWidth', 1.5);
-title('Standard vs Air Resistance (v_0=50, \theta=45°)');
-xlabel('Horizontal Distance (m)');
-ylabel('Vertical Distance (m)');
-legend('Standard', 'Air Resistance', 'Location', 'best');
-grid on;
-hold off;
+`g = 9.8` at the top is standard gravity and does not need changing unless your sheet
+asks for `9.81`.
 
-% =========================================================================
-% 2. Testing Varying Launch Angles (Step 4)
-% =========================================================================
-subplot(2, 2, 2);
-hold on;
-v0_constant = 50;
-test_angles = [30, 45, 60, 75];
+## ✏️ What to change in 4.2.m — Quadratic solver
 
-for i = 1:length(test_angles)
-    theta = (pi / 180) * test_angles(i);
-    t_max = (2 * v0_constant * sin(theta)) / g;
-    t = linspace(0, t_max, 200);
-    x = v0_constant .* cos(theta) .* t;
-    y = v0_constant .* sin(theta) .* t - 0.5 .* g .* t.^2;
-    plot(x, y, 'LineWidth', 1.5, 'DisplayName', sprintf('%d°', test_angles(i)));
-end
+`solve_quadratic(a, b, c)` handles every case correctly on its own — real distinct
+roots, a repeated root, complex roots, and the degenerate cases where `a = 0`. **Do
+not change the function.**
 
-title('Varying Launch Angles (v_0 = 50 m/s)');
-xlabel('Horizontal Distance (m)');
-ylabel('Vertical Distance (m)');
-legend('show', 'Location', 'best');
-grid on;
-hold off;
+What you *do* change is the four test calls underneath it. Right now they are:
 
-% =========================================================================
-% 3. Testing Varying Initial Velocities (Step 4)
-% =========================================================================
-subplot(2, 2, 3);
-hold on;
-theta_constant_deg = 45;
-theta_constant = (pi / 180) * theta_constant_deg;
-test_velocities = [20, 30, 40, 50];
+```matlab
+[r1, r2] = solve_quadratic(1, -5, 6);   % real distinct roots  -> x = 3, 2
+[r1, r2] = solve_quadratic(1, -4, 4);   % repeated root        -> x = 2
+[r1, r2] = solve_quadratic(1,  2, 5);   % complex roots        -> -1 ± 2i
+[r1, ~]  = solve_quadratic(0,  2, -4);  % edge case, a = 0     -> x = 2
+```
 
-for i = 1:length(test_velocities)
-    v0 = test_velocities(i);
-    t_max = (2 * v0 * sin(theta_constant)) / g;
-    t = linspace(0, t_max, 200);
-    x = v0 .* cos(theta_constant) .* t;
-    y = v0 .* sin(theta_constant) .* t - 0.5 .* g .* t.^2;
-    plot(x, y, 'LineWidth', 1.5, 'DisplayName', sprintf('%d m/s', v0));
-end
+Substitute the coefficients your lab sheet gives you. Keep one call per case if your
+sheet asks you to demonstrate all the root types — if you replace all four with
+equations that happen to have real roots, you will not have shown that the complex
+and edge-case branches work.
 
-title('Varying Initial Velocities (\theta = 45°)');
-xlabel('Horizontal Distance (m)');
-ylabel('Vertical Distance (m)');
-legend('show', 'Location', 'best');
-grid on;
-hold off;
+## ✏️ What to change in 4.3.m — Simultaneous equations
 
-% =========================================================================
-% 4. Testing Edge Cases
-% =========================================================================
-subplot(2, 2, 4);
-hold on;
+Same idea: `solve_linear_system(A, B)` is general and should be left alone. It
+compares `rank(A)` with `rank([A B])` to decide between a unique solution, infinite
+solutions, and no solution.
 
-% Edge cases array setup: [Velocity, Angle_in_Degrees, Description]
-edge_cases = {
-    50, 90, '90° (Straight Up)';
-    50, 0,  '0° (Horizontal)';
-    0,  45, 'v_0 = 0 m/s'
-};
+The three test cases below it are ours:
 
-for i = 1:size(edge_cases, 1)
-    v0_edge = edge_cases{i, 1};
-    theta_edge = (pi / 180) * edge_cases{i, 2};
-    label = edge_cases{i, 3};
-    
-    % Adjust max time for visualization if it doesn't leave the ground
-    if v0_edge == 0 || theta_edge == 0
-        t_max_edge = 2; 
-    else
-        t_max_edge = (2 * v0_edge * sin(theta_edge)) / g;
-    end
-    
-    t_edge = linspace(0, t_max_edge, 200);
-    y_vals = v0_edge .* sin(theta_edge) .* t_edge - 0.5 .* g .* t_edge.^2;
-    
-    % Filter to only show trajectory above or equal to ground level
-    valid_idx = y_vals >= 0;
-    x = v0_edge .* cos(theta_edge) .* t_edge(valid_idx);
-    y = y_vals(valid_idx);
-    
-    % If object never moves, plot a point at origin
-    if isempty(x)
-        x = 0; y = 0; 
-    end
-    
-    plot(x, y, 'LineWidth', 1.5, 'DisplayName', label);
-end
+```matlab
+A1 = [1, 1; 1, -1];  B1 = [5; 1];    % x + y = 5,  x - y = 1   -> unique solution
+A2 = [1, 1; 2, 2];   B2 = [5; 10];   % x + y = 5,  2x + 2y = 10 -> infinite solutions
+A3 = [1, 1; 1, 1];   B3 = [5; 3];    % x + y = 5,  x + y = 3    -> no solution
+```
 
-title('Edge Cases');
-xlabel('Horizontal Distance (m)');
-ylabel('Vertical Distance (m)');
-legend('show', 'Location', 'best');
-grid on;
-hold off;
+Replace them with your own systems. If you do, **also update the comment lines above
+each one**, since they spell out the equations being solved and would otherwise be
+wrong. As with the quadratic, keep one system per outcome so all three branches of
+the function are demonstrated.
